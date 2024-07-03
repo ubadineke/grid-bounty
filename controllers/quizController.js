@@ -48,3 +48,8 @@ Text: ${reply}, also make it an array of objects following the json specificatio
 };
 
 exports.checkAnswer = async (req, res, next) => {};
+
+exports.ping = async (req, res, next) => {
+    res.send('Chijioke');
+    console.log('Evian Deyyyy');
+};
