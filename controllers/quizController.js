@@ -11,30 +11,42 @@ exports.getQuestions = async (req, res, next) => {
 
         response = await axios.get('https://search.thegrid.id/?q=derivatives');
         reply = JSON.stringify(response.data);
-        console.log(reply);
+        // console.log(reply);
         // return;
-        const prompt = `Generate 5 questions from the text below, inclined to web 3. The response should be a JSON object with the following structure, ADD NO OTHER TEXT JUST THIS STRUCTURE! in particular the one denoting json,  just the json object:
-{
-  "question": "Your question here",
-  "options": ["Option A", "Option B", "Option C", "Option D"],
-  "correctAnswer": "The correct answer here"
-}
-Text: ${reply}, also make it an array of objects following the json specification,`;
+        const prompt = `Generate 5 questions from the text below that is inclined to Web 3. Also provide four possible options, with one being the correct answer. The options should be labeled as A, B, C, and D. The response should be formatted in JSON as shown below:
+        It's obvious its JSON but remove the backticks and the json keyword that it's used to indicate 
+  {
+    "question": "Your question here",
+    "options": {
+      "A": "Option A",
+      "B": "Option B",
+      "C": "Option C",
+      "D": "Option D"
+    },
+    "correctAnswer": "The correct answer key here (A, B, C, or D)"
+  }
+  Here is the text: ${reply} `;
         const result = await model.generateContent(prompt);
         const response1 = result.response;
         const text = response1.text();
+        console.log(text);
 
-        const questionsData = JSON.parse(text);
-        console.log(questionsData);
+        const text1 = text.replace(/^```json\s*([\s\S]*?)\s*```$/, '$1');
+        const questionsData = JSON.parse(text1);
+        // console.log(questionsData);
 
-        // Transform data to fit the schema
         const questions = questionsData.map((item) => ({
             question: item.question,
-            options: item.options,
+            options: {
+                A: item.options.A,
+                B: item.options.B,
+                C: item.options.C,
+                D: item.options.D,
+            },
             correctAnswer: item.correctAnswer,
         }));
+        console.log(questions);
 
-        // const quiz = new Quiz({ questions });
         const quiz = new Quiz({ questions });
         await quiz.save();
         res.status(200).json({
@@ -47,9 +59,33 @@ Text: ${reply}, also make it an array of objects following the json specificatio
     }
 };
 
-exports.checkAnswer = async (req, res, next) => {};
+exports.checkAnswers = async (req, res, next) => {
+    try {
+        const quizId = req.params.quizId;
+        const userAnswers = req.body.answers; // [{questionId, answer}, ...]
+
+        const quiz = await Quiz.findById(quizId);
+        if (!quiz) {
+            return res.status(404).send('Quiz not found');
+        }
+
+        let score = 0;
+        const totalQuestions = quiz.questions.length;
+
+        quiz.questions.forEach((question, index) => {
+            if (question.correctAnswer === userAnswers[index].answer) {
+                score++;
+            }
+        });
+
+        res.json({ score, totalQuestions });
+    } catch (err) {
+        res.status(500).json('Issues accessing gemini');
+        console.log(err);
+    }
+};
 
 exports.ping = async (req, res, next) => {
-    res.send('Chijioke');
     console.log('Evian Deyyyy');
+    res.status(200).send('Chijioke');
 };
