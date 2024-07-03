@@ -6,10 +6,11 @@ const axios = require('axios');
 
 exports.getQuestions = async (req, res, next) => {
     try {
+        const { s } = req.query;
         let response;
         let reply;
 
-        response = await axios.get('https://search.thegrid.id/?q=derivatives');
+        response = await axios.get(`https://search.thegrid.id/?q=${s}`);
         reply = JSON.stringify(response.data);
         // console.log(reply);
         // return;
@@ -59,29 +60,35 @@ exports.getQuestions = async (req, res, next) => {
     }
 };
 
-exports.checkAnswers = async (req, res, next) => {
+exports.calculateScore = async (req, res) => {
     try {
-        const quizId = req.params.quizId;
-        const userAnswers = req.body.answers; // [{questionId, answer}, ...]
+        const { answers } = req.body;
 
-        const quiz = await Quiz.findById(quizId);
-        if (!quiz) {
-            return res.status(404).send('Quiz not found');
-        }
+        // Fetch all questions from the database
+        const allQuestions = await Quiz.find({}, 'questions');
 
+        // Prepare a map for quick lookup of correct answers
+        const questionMap = new Map();
+        allQuestions.forEach((quiz) => {
+            quiz.questions.forEach((question) => {
+                questionMap.set(question._id.toString(), question.correctAnswer);
+            });
+        });
+
+        // Calculate the score based on submitted answers
         let score = 0;
-        const totalQuestions = quiz.questions.length;
-
-        quiz.questions.forEach((question, index) => {
-            if (question.correctAnswer === userAnswers[index].answer) {
+        answers.forEach((answer) => {
+            const correctAnswer = questionMap.get(answer.questionId);
+            if (correctAnswer && correctAnswer === answer.answer) {
                 score++;
             }
         });
 
-        res.json({ score, totalQuestions });
-    } catch (err) {
-        res.status(500).json('Issues accessing gemini');
-        console.log(err);
+        // Return the score as JSON response
+        res.status(200).json({ score });
+    } catch (error) {
+        console.error('Error calculating score:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 };
 
