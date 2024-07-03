@@ -39,7 +39,7 @@ Text: ${reply}, also make it an array of objects following the json specificatio
         await quiz.save();
         res.status(200).json({
             status: 'success',
-            quiz,
+            questions,
         });
     } catch (err) {
         res.status(500).json('Issues accessing gemini');
