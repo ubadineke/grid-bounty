@@ -4,6 +4,6 @@ const { getQuestions, ping, calculateScore } = require('../controllers/quizContr
 
 router.get('/quiz', getQuestions);
 router.get('/check/:id', calculateScore);
-router.get('/ping', ping);
+router.post('/ping', ping);
 
 module.exports = router;

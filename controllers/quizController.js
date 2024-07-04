@@ -12,8 +12,7 @@ exports.getQuestions = async (req, res, next) => {
 
         response = await axios.get(`https://search.thegrid.id/?q=${s}`);
         reply = JSON.stringify(response.data);
-        // console.log(reply);
-        // return;
+
         const prompt = `Generate 5 questions from the text below that is inclined to Web 3. Also provide four possible options, with one being the correct answer. The options should be labeled as A, B, C, and D. The response should be formatted in JSON as shown below:
         It's obvious its JSON but remove the backticks and the json keyword that it's used to indicate 
   {
@@ -30,11 +29,9 @@ exports.getQuestions = async (req, res, next) => {
         const result = await model.generateContent(prompt);
         const response1 = result.response;
         const text = response1.text();
-        console.log(text);
 
         const text1 = text.replace(/^```json\s*([\s\S]*?)\s*```$/, '$1');
         const questionsData = JSON.parse(text1);
-        // console.log(questionsData);
 
         const questions = questionsData.map((item) => ({
             question: item.question,
@@ -46,7 +43,6 @@ exports.getQuestions = async (req, res, next) => {
             },
             correctAnswer: item.correctAnswer,
         }));
-        console.log(questions);
 
         const quiz = new Quiz({ questions });
         await quiz.save();
