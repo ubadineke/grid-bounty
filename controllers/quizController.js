@@ -14,7 +14,6 @@ exports.getQuestions = async (req, res, next) => {
         reply = JSON.stringify(response.data);
 
         const prompt = `Generate 5 questions from the text below that is inclined to Web 3. Also provide four possible options, with one being the correct answer. The options should be labeled as A, B, C, and D. The response should be formatted in JSON as shown below:
-        It's obvious its JSON but remove the backticks and the json keyword that it's used to indicate 
   {
     "question": "Your question here",
     "options": {
@@ -90,5 +89,5 @@ exports.calculateScore = async (req, res) => {
 
 exports.ping = async (req, res, next) => {
     console.log('Evian Deyyyy');
-    res.status(200).send('Chijioke');
+    res.send('Chijioke');
 };
